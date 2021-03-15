@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t chedyhm/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true chedyhm/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t chedyhm/multi-client ./client
+  - docker build -t chedyhm/multi-server ./server
+  - docker build -t chedyhm/multi-worker ./worker
+  - docker build -t chedyhm/multi-nginx ./nginx
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push chedyhm/multi-client
+  - docker push chedyhm/multi-server
+  - docker push chedyhm/multi-worker
+  - docker push chedyhm/multi-nginx
+
+
